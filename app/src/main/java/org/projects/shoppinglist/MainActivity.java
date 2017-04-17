@@ -15,6 +15,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.util.SparseBooleanArray;
@@ -31,53 +32,58 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MyDialogFragment.OnPositiveListener {
 
+    //TO DO
+    // Appen Crasher efter Parcelable på adapter på savedInstanceState i OnCreate
+    //
+    //når man har slettet 2 også sletter igen så bugger den
 
-    ArrayAdapter<String> adapter;
+    ArrayAdapter<Product> adapter;
     ListView listView;
-    ArrayList<String> bag = new ArrayList<String>();
+    ArrayList<Product> bag = new ArrayList<Product>();
+    static MyDialogFragment dialog;
+    Spinner quantitySpinner;
+
 
     public ArrayAdapter getMyAdapter()
     {
         return adapter;
     }
+    static Context context;
 
-    //This method is called before our activity is destoryed
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        //ALWAYS CALL THE SUPER METHOD - To be nice!
         super.onSaveInstanceState(outState);
-        outState.putStringArrayList("saveBag", bag);
+        outState.putParcelableArrayList("savedBag", bag);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        this.context = this;
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        bag.add("Æble 2");
-        bag.add("Banan 4");
-        bag.add("Slappy John 5");
-        bag.add("Chokolade 6");
+        //SPINNER
+        quantitySpinner = (Spinner) findViewById(R.id.quantitySpinner);
+        ArrayAdapter<CharSequence> quantitySpinnerAdapter = ArrayAdapter.createFromResource(this, R.array.spinner_array, android.R.layout.simple_spinner_item);
+        quantitySpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        quantitySpinner.setAdapter(quantitySpinnerAdapter);
+
+        bag.add(new Product("æble", 2));
+        bag.add(new Product("Chokolade", 2));
 
         if (savedInstanceState!=null) {
-            this.bag = savedInstanceState.getStringArrayList("saveBag");
-        }
+            //ArrayList<Product> savedProducts = savedInstanceState.getParcelableArrayList("saveBag");
+            //his.bag = savedProducts;
+         }
 
-        //getting our listiew - you can check the ID in the xml to see that it
-        //is indeed specified as "list"
         listView = (ListView) findViewById(R.id.list);
-        //here we create a new adapter linking the bag and the
-        //listview
-        adapter =  new ArrayAdapter<String>(this, android.R.layout.simple_list_item_checked,bag );
+        adapter =  new ArrayAdapter<Product>(this,android.R.layout.simple_list_item_checked,bag );
 
-        //setting the adapter on the listview
         listView.setAdapter(adapter);
-        //here we set the choice mode - meaning in this case we can
-        //only select one item at a time.
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 
 
@@ -90,8 +96,6 @@ public class MainActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                //The next line is needed in order to say to the ListView
-                //that the data has changed - we have added stuff now!
                 getMyAdapter().notifyDataSetChanged();
             }
         });
@@ -101,48 +105,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 deleteSelectedItems();
-                //The next line is needed in order to say to the ListView
-                //that the data has changed - we have added stuff now!
                 getMyAdapter().notifyDataSetChanged();
             }
         });
-
-
     }
 
-    public void addToBag() throws Exception {
+    public void addToBag() {
 
+        EditText productText = (EditText)findViewById(R.id.productText);
+        String quantityText = (String)quantitySpinner.getSelectedItem();
+        Product p1 = new Product(productText.getText() + "", Integer.parseInt( quantityText+ ""));
 
-        URL url = new URL("http://192.168.87.110/api/AnZIbmJ2dDdG4PkKfwHzs2nW42IRofJt3mmTCaA4/groups/4/action");
-        HttpURLConnection con = (HttpURLConnection)url.openConnection();
-
-        con.setRequestMethod("PUT");
-
-        String body = "{\"on\":true, \"sat\":254, \"bri\":254,\"hue\":42632}";
-
-
-        InputStream is = new ByteArrayInputStream( body.getBytes("UTF-8"));
-
-
-        con.setDoOutput(true);
-
-         con.getOutputStream();
-
-
-        DataOutputStream wr = new DataOutputStream (
-                con.getOutputStream());
-        wr.writeBytes(body);
-        wr.close();
-
-
-        con.disconnect();
-        /*EditText productText = (EditText)findViewById(R.id.productText);
-        EditText quantityText = (EditText)findViewById(R.id.quantityText);
-
-        String toBag = productText.getText() + " " + quantityText.getText();
-
-        if(!TextUtils.isEmpty(productText.getText()) && !TextUtils.isEmpty(quantityText.getText())){
-            bag.add(toBag);
+        if(!TextUtils.isEmpty(productText.getText()) && !TextUtils.isEmpty(quantityText)){
+            bag.add(p1);
             createToast("Dit produkt blev oprettet");
 
         }else{
@@ -151,9 +126,7 @@ public class MainActivity extends AppCompatActivity {
 
         ArrayList<EditText> list = new ArrayList<>();
         list.add(productText);
-        list.add(quantityText);
-
-        clearTextFields(list);*/
+        clearTextFields(list);
     }
 
 
@@ -175,16 +148,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void deleteItem(ArrayList<Integer> indexofDeletetItem){
-
         for(Integer i : indexofDeletetItem){
-            String item = bag.get(i);
+            Product item = bag.get(i);
             bag.remove(item);
-
             System.out.println("Item: " + item + " ID: " + i);
         }
-      //  adapter.notifyDataSetChanged();
     }
 
+    public void clearEntireList(View view){
+        dialog = new MyDialog();
+        dialog.show(getFragmentManager(), "MyFragment");
+
+    }
+
+    public static class MyDialog extends MyDialogFragment {
+        @Override
+        protected void negativeClick() {
+            //Here we override the method and can now do something
+            Toast toast = Toast.makeText(context,
+                    "The list is as normal", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+    }
+
+    @Override
+    public void onPositiveClicked() {
+        createToast("The list is now empty");
+        bag.clear();
+        getMyAdapter().notifyDataSetChanged();
+    }
 
 
     public void clearTextFields(ArrayList<EditText> editTextArraylist){
