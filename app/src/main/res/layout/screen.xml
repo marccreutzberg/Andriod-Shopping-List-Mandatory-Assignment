@@ -32,24 +32,19 @@
 
         <EditText
             android:id="@+id/productText"
-            android:layout_width="162dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="@string/hintProductText"
             android:inputType="textPersonName"
-            android:text="" />
+            android:text=""
+            android:layout_weight="0.09" />
 
         <Spinner
             android:id="@+id/quantitySpinner"
             android:layout_width="80dp"
-            android:layout_height="37dp"/>
-
-        <Button
-            android:id="@+id/addButton"
-            android:layout_width="70dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.15"
-            android:text="Add to bag" />
+            android:layout_height="37dp"
+            android:layout_weight="0.08" />
 
     </LinearLayout>
 
@@ -61,17 +56,18 @@
 
         <Button
             android:id="@+id/deleteSelectedItems"
-            android:layout_width="152dp"
+            android:layout_width="134dp"
             android:layout_height="wrap_content"
             android:text="Delete"
-            android:layout_weight="0.88" />
+            android:layout_weight="0.23" />
 
         <Button
-            android:id="@+id/clearAll"
-            android:onClick="clearEntireList"
-            android:layout_width="176dp"
+            android:id="@+id/addButton"
+            android:layout_width="70dp"
             android:layout_height="wrap_content"
-            android:text="Clear All" />
+            android:layout_weight="0.64"
+            android:text="Add to bag" />
+
     </LinearLayout>
 
     <ListView

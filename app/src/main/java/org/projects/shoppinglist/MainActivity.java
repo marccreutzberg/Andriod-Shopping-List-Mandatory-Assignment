@@ -2,6 +2,7 @@ package org.projects.shoppinglist;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -19,6 +20,12 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.util.SparseBooleanArray;
+
+import com.firebase.ui.database.FirebaseListAdapter;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import org.w3c.dom.Text;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
@@ -39,17 +46,30 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
     //
     //når man har slettet 2 også sletter igen så bugger den
 
-    ArrayAdapter<Product> adapter;
+    //I top navigation -- aways virker ikke ?  android:showAsAction="always"
+
+    //GAMLE ADAPTER
+   // ArrayAdapter<Product> adapter;
+
+    DatabaseReference firebase = FirebaseDatabase.getInstance().getReference().child("items");
     ListView listView;
     ArrayList<Product> bag = new ArrayList<Product>();
     static MyDialogFragment dialog;
     Spinner quantitySpinner;
+    FirebaseListAdapter<Product> fbListAdapter;
 
 
+    /* GAMLE ADAPTER
     public ArrayAdapter getMyAdapter()
     {
         return adapter;
+    }*/
+
+    public FirebaseListAdapter getFirebaseListAdapter(){
+        return fbListAdapter;
     }
+
+
     static Context context;
 
     @Override
@@ -72,20 +92,29 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         quantitySpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         quantitySpinner.setAdapter(quantitySpinnerAdapter);
 
-        bag.add(new Product("æble", 2));
-        bag.add(new Product("Chokolade", 2));
 
         if (savedInstanceState!=null) {
             //ArrayList<Product> savedProducts = savedInstanceState.getParcelableArrayList("saveBag");
             //his.bag = savedProducts;
-         }
+        }
+
+        //OLD LIST VIEW
+       /* listView = (ListView) findViewById(R.id.list);
+        adapter =  new ArrayAdapter<Product>(this,android.R.layout.simple_list_item_checked,bag );
+        listView.setAdapter(adapter);
+        */
+
 
         listView = (ListView) findViewById(R.id.list);
-        adapter =  new ArrayAdapter<Product>(this,android.R.layout.simple_list_item_checked,bag );
-
-        listView.setAdapter(adapter);
+        fbListAdapter = new FirebaseListAdapter<Product>(this, Product.class, android.R.layout.simple_list_item_checked, firebase) {
+            @Override
+            protected void populateView(View view, Product product, int position) {
+                TextView tw = ((TextView)view.findViewById(android.R.id.text1));
+                tw.setText(product.toString());
+            }
+        };
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-
+        listView.setAdapter(fbListAdapter);
 
         Button addButton = (Button) findViewById(R.id.addButton);
         addButton.setOnClickListener(new View.OnClickListener() {
@@ -96,28 +125,28 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                getMyAdapter().notifyDataSetChanged();
+                getFirebaseListAdapter().notifyDataSetChanged();
             }
         });
-
         Button deleteSelectedItems = (Button) findViewById(R.id.deleteSelectedItems);
         deleteSelectedItems.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 deleteSelectedItems();
-                getMyAdapter().notifyDataSetChanged();
+                getFirebaseListAdapter().notifyDataSetChanged();
             }
         });
     }
 
     public void addToBag() {
-
         EditText productText = (EditText)findViewById(R.id.productText);
         String quantityText = (String)quantitySpinner.getSelectedItem();
-        Product p1 = new Product(productText.getText() + "", Integer.parseInt( quantityText+ ""));
 
         if(!TextUtils.isEmpty(productText.getText()) && !TextUtils.isEmpty(quantityText)){
-            bag.add(p1);
+            Product p1 = new Product(productText.getText() + "", Integer.parseInt( quantityText+ ""));
+            firebase.push().setValue(p1);
+            getFirebaseListAdapter().notifyDataSetChanged();
+
             createToast("Dit produkt blev oprettet");
 
         }else{
@@ -132,33 +161,83 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
 
 
     public void deleteSelectedItems(){
+
+        //checkedItemsBoolan giving a array of all items i listview
+        //If the item is checked the value is True if not the value if False
         SparseBooleanArray checkedItemsBoolan = listView.getCheckedItemPositions();
+
+        //list of all selected items in listView
         ArrayList<Integer> cheked = new ArrayList<Integer>();
 
+        //Last Deleted product for snackbar
+       final ArrayList<Product> lastDeletedProducts = new ArrayList<>();
+
         for(int i = 0; i < checkedItemsBoolan.size(); i++){
+                //if the item is selected in listView
             if(checkedItemsBoolan.valueAt(i)){
                 int position = checkedItemsBoolan.keyAt(i);
+                //adding the item to "checked" array
                 cheked.add(position);
             }
         }
-        //TO Do tjek op på bug
-        //når man har slettet 2 også sletter igen så bugger den
-        deleteItem(cheked);
 
-    }
+        for(Integer i : cheked){
 
-    public void deleteItem(ArrayList<Integer> indexofDeletetItem){
-        for(Integer i : indexofDeletetItem){
-            Product item = bag.get(i);
-            bag.remove(item);
-            System.out.println("Item: " + item + " ID: " + i);
+            //adding objects to lastDeletedProducts for snackBar
+            Product p = getItem(i);
+            lastDeletedProducts.add(p);
+
+            //deleting items in firebase
+            getFirebaseListAdapter().getRef(i).setValue(null);
         }
+
+        final View parent = listView;
+
+        Snackbar snackbar = Snackbar
+                .make(parent, "Item Deleted", Snackbar.LENGTH_LONG)
+                .setAction("UNDO", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+
+                        for(Product p: lastDeletedProducts){
+                            firebase.push().setValue(p);
+                        }
+
+                        getFirebaseListAdapter().notifyDataSetChanged();
+                        Snackbar snackbar = Snackbar.make(parent, "Item restored!", Snackbar.LENGTH_SHORT);
+                        snackbar.show();
+                    }
+                });
+
+        snackbar.show();
+
+
+        //clearing the checked list
+        checkedItemsBoolan.clear();
+        cheked.clear();
     }
 
-    public void clearEntireList(View view){
+    public void clearEntireList(){
         dialog = new MyDialog();
         dialog.show(getFragmentManager(), "MyFragment");
 
+        //calling onPositiveClicked in dialog
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+
+            case android.R.id.home:
+                Toast.makeText(this, "Application icon clicked!",
+                        Toast.LENGTH_SHORT).show();
+                return true; //return true, means we have handled the event
+            case R.id.item_clearAll:
+                clearEntireList();
+
+                return true;
+        }
+
+        return false; //we did not handle the event
     }
 
     public static class MyDialog extends MyDialogFragment {
@@ -174,8 +253,7 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
     @Override
     public void onPositiveClicked() {
         createToast("The list is now empty");
-        bag.clear();
-        getMyAdapter().notifyDataSetChanged();
+        firebase.setValue(null);
     }
 
 
@@ -216,18 +294,9 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+    public Product getItem(int index)
+    {
+        return (Product) getFirebaseListAdapter().getItem(index);
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 }
