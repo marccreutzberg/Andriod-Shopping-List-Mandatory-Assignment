@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <ListPreference
+        android:key="themePreference"
+        android:title="@string/theme_colour"
+        android:entries="@array/themeOptions"
+        android:entryValues="@array/themeValues"
+        android:summary="%s"/>
+
+
+    <EditTextPreference
+        android:key="name"
+        android:defaultValue="@string/enterName"
+        android:summary="Enter your name"
+        android:title="Name" />
+
+</PreferenceScreen>

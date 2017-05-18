@@ -4,10 +4,24 @@
     <string name="hintProductText">Produkt</string>
     <string name="QuantityText">Qty</string>
     <string name="hello_world">Hello world!</string>
+    <string name="enterName"> Enter name</string>
     <string name="confirmation">Confirmation</string>
     <string name="areYouSure">Are you sure?</string>
+    <string name="theme_colour">Color Of theme</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+
+    <string-array name="themeOptions">
+        <item>Blue</item>
+        <item>Red</item>
+        <item>Green</item>
+    </string-array>
+
+    <string-array name="themeValues">
+        <item>BlueTheme</item>
+        <item>RedTheme</item>
+        <item>GreenTheme</item>
+    </string-array>
 
     <string-array name="spinner_array">
         <item>1</item>

@@ -7,12 +7,10 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -32,12 +30,6 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements MyDialogFragment.OnPositiveListener {
 
-    //TO DO
-    // Appen Crasher efter Parcelable på adapter på savedInstanceState i OnCreate
-    //
-    //når man har slettet 2 også sletter igen så bugger den
-
-
 
     DatabaseReference firebase = FirebaseDatabase.getInstance().getReference().child("items");
     ListView listView;
@@ -56,29 +48,32 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        //hvis man er ved at skrive noget få det ind her
         //outState.putParcelableArrayList("savedBag", fbListAdapter);
+        EditText productText = (EditText)findViewById(R.id.productText);
+
+        outState.putString("inputValue", productText.getText() + "");
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        //Theme
+        String theme = MyPreferenceFragment.getSettingsThemekey(this);
+        String packageName = getPackageName();
+        int resId = getResources().getIdentifier(theme, "style", packageName);
+        super.setTheme(resId);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+
         this.context = this;
+
+        setContentView(R.layout.activity_main);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        //SPINNER
-        quantitySpinner = (Spinner) findViewById(R.id.quantitySpinner);
-        ArrayAdapter<CharSequence> quantitySpinnerAdapter = ArrayAdapter.createFromResource(this, R.array.spinner_array, android.R.layout.simple_spinner_item);
-        quantitySpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        quantitySpinner.setAdapter(quantitySpinnerAdapter);
-
-
-        //når man vender
         if (savedInstanceState!=null) {
-            //ArrayList<Product> savedProducts = savedInstanceState.getParcelableArrayList("saveBag");
-            //his.bag = savedProducts;
+            String product = savedInstanceState.getString("inputValue");
+            EditText productText = (EditText)findViewById(R.id.productText);
+            productText.setText(product);
         }
 
         listView = (ListView) findViewById(R.id.list);
@@ -91,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         };
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         listView.setAdapter(fbListAdapter);
+
+
 
         Button addButton = (Button) findViewById(R.id.addButton);
         addButton.setOnClickListener(new View.OnClickListener() {
@@ -112,7 +109,24 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
                 getFirebaseListAdapter().notifyDataSetChanged();
             }
         });
+
+
+        //SPINNER
+        quantitySpinner = (Spinner) findViewById(R.id.quantitySpinner);
+        ArrayAdapter<CharSequence> quantitySpinnerAdapter = ArrayAdapter.createFromResource(this, R.array.spinner_array, android.R.layout.simple_spinner_item);
+        quantitySpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        quantitySpinner.setAdapter(quantitySpinnerAdapter);
+
+        //Name Text
+        String name = MyPreferenceFragment.getName(this);
+        TextView userName = (TextView) findViewById(R.id.userName);
+        if(userName.toString() != "" ){
+            userName.setText(name);
+        }else{
+            userName.setText("Welcome to Shopping list, you can enter your name the settings");
+        }
     }
+
 
     public void addToBag() {
         EditText productText = (EditText)findViewById(R.id.productText);
@@ -133,8 +147,6 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         list.add(productText);
         clearTextFields(list);
     }
-
-
 
     public void deleteSelectedItems(){
         //checkedItemsBoolan giving a array of all items i listview
@@ -167,7 +179,6 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         }
 
         final View parent = listView;
-
         Snackbar snackbar = Snackbar
                 .make(parent, "Item Deleted", Snackbar.LENGTH_LONG)
                 .setAction("UNDO", new View.OnClickListener() {
@@ -183,9 +194,7 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
                         snackbar.show();
                     }
                 });
-
         snackbar.show();
-
 
         //clearing the checked list
         checkedItemsBoolan.clear();
@@ -215,6 +224,13 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         //calling onPositiveClicked in dialog
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
 
@@ -228,10 +244,32 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
             case R.id.item_shareList:
                 shareList();
                 return true;
+            case R.id.item_settings:
+                settings();
+                return true;
         }
 
-        return false; //we did not handle the event
+        return super.onOptionsItemSelected(item);
     }
+
+    public boolean settings() {
+
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivityForResult(intent, 1);
+        return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1) //the code means we came back from settings
+        {
+            finish();
+            startActivity(getIntent());
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
 
     public static class MyDialog extends MyDialogFragment {
         @Override
@@ -278,13 +316,6 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
 
         //Viser Toasten
         toast.show();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
     }
 
     public Product getItem(int index)

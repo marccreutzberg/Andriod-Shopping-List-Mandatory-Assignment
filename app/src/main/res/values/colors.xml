@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+<color name="colorPrimary">#d9d9d9</color>
+<color name="colorPrimaryDark">#cdcdcd</color>
+<color name="colorAccent">#9e9e9e</color>
+
+<color name="colorBluePrimary">#050aee</color>
+<color name="colorBluePrimaryDark">#0005c4</color>
+<color name="colorBlueAccent">#3235c1</color>
+
+<!-- Green Theme -->
+<color name="colorGreenPrimary">#36ff00</color>
+<color name="colorGreenPrimaryDark">#1e8c00</color>
+<color name="colorGreenAccent">#4eb532</color>
+
+<!-- Red Theme -->
+<color name="colorRedPrimary">#e80000</color>
+<color name="colorRedPrimaryDark">#960000</color>
+<color name="colorRedAccent">#bd3535</color>
 </resources>
