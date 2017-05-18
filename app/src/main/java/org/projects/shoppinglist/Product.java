@@ -10,11 +10,11 @@ import android.os.Parcelable;
 public class Product implements Parcelable {
     private int mData;
     private String name;
-    private int quantity;
+    private String quantity;
 
     public Product() {} //Empty constructor we will need later!
 
-    public Product(String name, int quantity)
+    public Product(String name, String quantity)
     {
         this.name = name;
         this.quantity = quantity;
@@ -23,7 +23,7 @@ public class Product implements Parcelable {
     protected Product(Parcel in) {
         mData = in.readInt();
         name = in.readString();
-        quantity = in.readInt();
+        quantity = in.readString();
     }
 
     public static final Parcelable.Creator<Product> CREATOR
@@ -50,11 +50,11 @@ public class Product implements Parcelable {
         this.name = name;
     }
 
-    public int getQuantity() {
+    public String getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(String quantity) {
         this.quantity = quantity;
     }
 

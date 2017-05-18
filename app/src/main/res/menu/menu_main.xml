@@ -10,9 +10,16 @@
         android:title="Clear List"/>
 
     <item
-        android:id="@+id/item_settings"
-        android:icon="@android:drawable/ic_menu_manage"
+    android:id="@+id/item_settings"
+    android:icon="@android:drawable/ic_menu_manage"
+    app:showAsAction="ifRoom"
+    android:orderInCategory="2"
+    android:title="Settings"/>
+
+    <item
+        android:id="@+id/item_shareList"
+        android:icon="@android:drawable/ic_menu_share"
         app:showAsAction="ifRoom"
         android:orderInCategory="2"
-        android:title="Settings"/>
+        android:title="Share List"/>
 </menu>
