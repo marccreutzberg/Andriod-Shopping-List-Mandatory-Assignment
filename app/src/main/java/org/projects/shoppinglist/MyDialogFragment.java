@@ -6,12 +6,10 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+/**
+ * Created by Marc Creutzberg
+ */
 
-
-//You can pretty much reuse this class in your own project
-//if you want you can modify some of the text shown below.
-//of course if it was for a multilingual app you would put
-//the actual text that is now hardcoded inside the strings.xml file
 public class MyDialogFragment extends DialogFragment {
 
     public MyDialogFragment()
@@ -19,13 +17,10 @@ public class MyDialogFragment extends DialogFragment {
 
     OnPositiveListener mCallback;
 
-    // Container Activity must implement this interface
     public interface OnPositiveListener {
         void onPositiveClicked();
     }
 
-    //This method will be called when the dialog fragment is called
-    //and "attached" to the current activity
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -36,7 +31,6 @@ public class MyDialogFragment extends DialogFragment {
             throw new ClassCastException(activity.toString()  + " must implement OnPositiveListener");
         }
     }
-
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {

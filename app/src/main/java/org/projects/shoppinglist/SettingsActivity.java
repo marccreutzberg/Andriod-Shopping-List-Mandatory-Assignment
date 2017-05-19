@@ -3,6 +3,9 @@ package org.projects.shoppinglist;
 import android.app.Activity;
 import android.os.Bundle;
 
+/**
+ * Created by Marc Creutzberg
+ */
 
 public class SettingsActivity  extends Activity {
 

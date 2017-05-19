@@ -5,6 +5,10 @@ import android.os.Bundle;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 
+
+/**
+ * Created by Marc Creutzberg
+ */
 public class MyPreferenceFragment extends PreferenceFragment {
 
     private static String SETTINGS_NAMEKEY = "name";

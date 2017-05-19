@@ -6,7 +6,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="enterName"> Enter name</string>
     <string name="confirmation">Confirmation</string>
-    <string name="areYouSure">Are you sure?</string>
+    <string name="areYouSure">Are you sure you want to delete all items? </string>
     <string name="theme_colour">Color Of theme</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>

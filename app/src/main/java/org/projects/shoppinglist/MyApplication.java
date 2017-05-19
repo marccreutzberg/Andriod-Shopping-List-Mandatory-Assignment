@@ -7,7 +7,7 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.FirebaseDatabase;
 
 /**
- * Created by Marc Creutzberg on 04-05-2017.
+ * Created by Marc Creutzberg
  */
 
 public class MyApplication extends Application {

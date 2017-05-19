@@ -26,37 +26,40 @@ import com.google.firebase.database.FirebaseDatabase;
 
 
 import java.util.ArrayList;
-
+/**
+ * Created by Marc Creutzberg.
+ */
 
 public class MainActivity extends AppCompatActivity implements MyDialogFragment.OnPositiveListener {
-
-
+    //Database Referense
     DatabaseReference firebase = FirebaseDatabase.getInstance().getReference().child("items");
+
+    //Shopping list View'et
     ListView listView;
+
+    //The delete all dialog
     static MyDialogFragment dialog;
+
+    //Quantity spinner
     Spinner quantitySpinner;
+
+    //The fireBaseAdapter
     FirebaseListAdapter<Product> fbListAdapter;
-
-
-    public FirebaseListAdapter getFirebaseListAdapter(){
-        return fbListAdapter;
-    }
-
 
     static Context context;
 
+
+    //When the screen turns
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        //outState.putParcelableArrayList("savedBag", fbListAdapter);
         EditText productText = (EditText)findViewById(R.id.productText);
-
         outState.putString("inputValue", productText.getText() + "");
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        //Theme
+        //Setting theme
         String theme = MyPreferenceFragment.getSettingsThemekey(this);
         String packageName = getPackageName();
         int resId = getResources().getIdentifier(theme, "style", packageName);
@@ -64,18 +67,21 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         super.onCreate(savedInstanceState);
 
         this.context = this;
-
         setContentView(R.layout.activity_main);
 
+        //Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
+        //Getting the data from savedInstanceState if not null
         if (savedInstanceState!=null) {
             String product = savedInstanceState.getString("inputValue");
             EditText productText = (EditText)findViewById(R.id.productText);
             productText.setText(product);
         }
 
+        //Creating the ListView with firebaseListAdapter
         listView = (ListView) findViewById(R.id.list);
         fbListAdapter = new FirebaseListAdapter<Product>(this, Product.class, android.R.layout.simple_list_item_checked, firebase) {
             @Override
@@ -87,8 +93,7 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         listView.setAdapter(fbListAdapter);
 
-
-
+        //Creating the Add Button
         Button addButton = (Button) findViewById(R.id.addButton);
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -101,6 +106,8 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
                 getFirebaseListAdapter().notifyDataSetChanged();
             }
         });
+
+        //Creating the DeleteSelecedItems Button
         Button deleteSelectedItems = (Button) findViewById(R.id.deleteSelectedItems);
         deleteSelectedItems.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,7 +116,6 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
                 getFirebaseListAdapter().notifyDataSetChanged();
             }
         });
-
 
         //SPINNER
         quantitySpinner = (Spinner) findViewById(R.id.quantitySpinner);
@@ -127,7 +133,9 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         }
     }
 
-
+    /**
+     * Adds a new item to the databse
+     */
     public void addToBag() {
         EditText productText = (EditText)findViewById(R.id.productText);
         String quantityText = (String)quantitySpinner.getSelectedItem();
@@ -137,10 +145,10 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
             firebase.push().setValue(p1);
             getFirebaseListAdapter().notifyDataSetChanged();
 
-            createToast("Dit produkt blev oprettet");
+            createToast("Your product was created");
 
         }else{
-            createToast("Dine produkt felter er tomme");
+            createToast("Your product fields are empty");
         }
 
         ArrayList<EditText> list = new ArrayList<>();
@@ -148,6 +156,11 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         clearTextFields(list);
     }
 
+    /**
+     * deleteSelecedItems
+     *
+     * Deleing the selected items from the listView
+     */
     public void deleteSelectedItems(){
         //checkedItemsBoolan giving a array of all items i listview
         //If the item is checked the value is True if not the value if False
@@ -157,10 +170,10 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         ArrayList<Integer> cheked = new ArrayList<Integer>();
 
         //Last Deleted product for snackbar
-       final ArrayList<Product> lastDeletedProducts = new ArrayList<>();
+        final ArrayList<Product> lastDeletedProducts = new ArrayList<>();
 
         for(int i = 0; i < checkedItemsBoolan.size(); i++){
-                //if the item is selected in listView
+            //if the item is selected in listView
             if(checkedItemsBoolan.valueAt(i)){
                 int position = checkedItemsBoolan.keyAt(i);
                 //adding the item to "checked" array
@@ -169,7 +182,6 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         }
 
         for(Integer i : cheked){
-
             //adding objects to lastDeletedProducts for snackBar
             Product p = getItem(i);
             lastDeletedProducts.add(p);
@@ -201,6 +213,13 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         cheked.clear();
     }
 
+    /**
+     * Share list
+     *
+     * looping through all items i firebase and adds name and quantity to "textTOShare" string
+     * then creating a Intent that send a text
+     *
+     */
     public void shareList(){
         String textToShare = "- - -Shopping list Items- - - \n  \n";
 
@@ -217,6 +236,11 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         startActivity(sendIntent);
     }
 
+    /**
+     * clearEntireList
+     *
+     * Creating the dialog for clearing the Entire List
+     */
     public void clearEntireList(){
         dialog = new MyDialog();
         dialog.show(getFragmentManager(), "MyFragment");
@@ -231,6 +255,16 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         return true;
     }
 
+    /**
+     * onOptionsItemSelected
+     *
+     * Menu item Press method
+     *
+     * Making a switch case if for see which menu items if pressed
+     *
+     * @param item
+     * @return
+     */
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
 
@@ -252,13 +286,23 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * settings
+     * Creating the setting Intent
+     * @return
+     */
     public boolean settings() {
-
         Intent intent = new Intent(this, SettingsActivity.class);
         startActivityForResult(intent, 1);
         return true;
     }
 
+    /**
+     *
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 1) //the code means we came back from settings
@@ -281,6 +325,11 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         }
     }
 
+    /**
+     * onPositiveClicked
+     *
+     * If pressed yes in the dialog then deleting the entire list.
+     */
     @Override
     public void onPositiveClicked() {
         createToast("The list is now empty");
@@ -288,15 +337,22 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
     }
 
 
+    /**
+     * Helper method to clear all input fields
+     * @param editTextArraylist
+     */
     public void clearTextFields(ArrayList<EditText> editTextArraylist){
         for(EditText v: editTextArraylist){
             v.setText("");
         }
     }
 
+    /**
+     * Helper method to creaing a Toast
+     * @param msg
+     */
     public void createToast(String msg){
-
-        //Laver en Toast
+        //Creating a Toast
         Toast toast;
         Context context = getApplicationContext();
         int duration = Toast.LENGTH_SHORT;
@@ -318,9 +374,20 @@ public class MainActivity extends AppCompatActivity implements MyDialogFragment.
         toast.show();
     }
 
-    public Product getItem(int index)
-    {
+    /**
+     * Helper Method to getItem from a intex in the FirebaseListAdapter
+     * @param index
+     * @return
+     */
+    public Product getItem(int index) {
         return (Product) getFirebaseListAdapter().getItem(index);
+    }
 
+    /**
+     * Getter for FirebaseListAdapter
+     * @return
+     */
+    public FirebaseListAdapter getFirebaseListAdapter() {
+        return fbListAdapter;
     }
 }
